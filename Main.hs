@@ -1,5 +1,6 @@
 -- https://wiki.haskell.org/99_questions
 
+import Control.Arrow ((&&&))
 import Data.List (group)
 
 -- Problem 1
@@ -64,4 +65,75 @@ pack = foldr f []
     f x (y : ys) =
       if head y == x
         then (x : y) : ys
-        else [x] : ys
+        else [x] : y : ys
+
+-- Problem 10
+
+encode :: Eq a => [a] -> [(Int, a)]
+encode = map f . pack
+  where
+    f x = (length x, head x)
+
+encode' :: Eq a => [a] -> [(Int, a)]
+encode' = map (length &&& head) . group
+
+encode'' :: Eq a => [a] -> [(Int, a)]
+encode'' = map ((,) <$> length <*> head) . group
+
+-- Problem 11
+
+data ListItem a
+  = Single a
+  | Multiple Int a
+  deriving (Show)
+
+encodeModified :: Eq a => [a] -> [ListItem a]
+encodeModified = map f . encode
+  where
+    f (1, x) = Single x
+    f (n, x) = Multiple n x
+
+-- Problem 12
+
+decodeModified :: [ListItem a] -> [a]
+decodeModified = concatMap f
+  where
+    f (Single x) = [x]
+    f (Multiple n x) = replicate n x
+
+-- Problem 13
+encodeDirect :: Eq a => [a] -> [ListItem a]
+encodeDirect = map f . encode
+  where
+    f (1, x) = Single x
+    f (n, x) = Multiple n x
+    encode = foldr encodeHelper []
+    encodeHelper x [] = [(1, x)]
+    encodeHelper x (t@(n, y) : ys) =
+      if x == y
+        then (n + 1, y) : ys
+        else (1, x) : t : ys
+
+-- Problem 14
+
+dupli :: [a] -> [a]
+dupli = concatMap $ replicate 2
+
+-- Problem 15
+
+repli :: [a] -> Int -> [a]
+repli = flip $ concatMap . replicate
+
+-- Problem 16
+
+dropEvery :: [a] -> Int -> [a]
+dropEvery xs n = [x | (i, x) <- zip [1 ..] xs, (i `mod` n) /= 0]
+
+-- Problem 17
+
+split :: [a] -> Int -> ([a], [a])
+split xs n = foldr f ([], []) $ zip [0 ..] xs
+  where
+    f (i, x) (left, right)
+      | i < n = (x : left, right)
+      | otherwise = (left, x : right)

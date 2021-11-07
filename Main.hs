@@ -2,6 +2,7 @@
 
 import Control.Arrow ((&&&))
 import Data.List (group)
+import Data.Tuple (swap)
 
 -- Problem 1
 myLast :: [a] -> Maybe a
@@ -137,3 +138,26 @@ split xs n = foldr f ([], []) $ zip [0 ..] xs
     f (i, x) (left, right)
       | i < n = (x : left, right)
       | otherwise = (left, x : right)
+
+-- Problem 18
+
+-- https://wiki.haskell.org/99_questions/Solutions/18
+slice :: [a] -> Int -> Int -> [a]
+slice [] _ _ = []
+slice _ _ 0 = []
+slice (x : xs) 1 n = x : slice xs 1 (n -1)
+slice (_ : xs) m n = slice xs (m -1) (n -1)
+
+-- Problem 19
+
+rotate :: [a] -> Int -> [a]
+rotate xs i = (uncurry (++) . swap) $ split xs i'
+  where
+    i' = i + if i < 0 then length xs else 0
+
+-- Problem 20
+
+removeAt :: Int -> [a] -> (a, [a])
+removeAt _ [] = error "empty list"
+removeAt 1 (x : xs) = (x, xs)
+removeAt i (x : xs) = (x :) <$> removeAt (i - 1) xs
